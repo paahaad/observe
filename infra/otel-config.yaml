@@ -1,0 +1,47 @@
+# Otel Collector Setup
+extension:
+    health-check: # expose an http endpoint with collector information
+    pprof: #expose http to investigate or profile the collector process
+        endpoint: 0.0.0.0:1777
+    zpage: #expose http to debugging the collector component
+        endpoint: 0.0.0.0:55679
+
+receivers:
+    otel: #to ingests OTLP formatted data 
+        protocol:
+            grpc:
+                endpoint: 0.0.0.0:4317
+            http:
+                endpoint: 0.0.0.0:4318
+            
+    prometheus: #to ingest matric in prometheus format
+    jaeger: #to ingest traces in jaeger format
+        protocal:
+            grpc:
+
+process:
+    batch:
+
+exporters:
+    debug:
+        verbosity: detailed
+
+
+service: #here we assamble the pipline
+    pipeline:
+        traces:
+            receivers: [otel, prometheus, jaeger]
+            processors: [batch]
+            exporters: [logging]
+        matric:
+            receivers: [otel, prometheus, jaeger]
+            processors: [batch]
+            exporters: [logging]
+        logs:
+        extensions: [health_check,pprof,zpages]
+    telemetry:
+        logs:
+            level: debug
+
+
+
